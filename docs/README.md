@@ -3,32 +3,34 @@
 
 # TestProf
 
-> Ruby tests profiling and optimization toolbox
+> Ruby テストのプロファイリングと最適化のためのツールボックス
 
 <img align="right" height="150" width="129"
      title="TestProf logo" class="home-logo" src="./assets/images/logo.svg">
 
-TestProf is a collection of different tools to analyze your test suite performance.
+TestProf はテストスイートの性能を分析するための様々なツールの詰め合わせです。
 
-Why does test suite performance matter? First of all, testing is a part of a developer's feedback loop (see [@searls](https://github.com/searls) [talk](https://vimeo.com/145917204)) and, secondly, it is a part of a deployment cycle.
+どうしてテストスイートの性能が重要なのでしょうか？  
+第一に、テストは開発者のためのフィードバックループの一部です。(参考: [@searls](https://github.com/searls) [talk](https://vimeo.com/145917204))  
+そして第二に、テストはデプロイサイクルの一部でもあります。  
 
-Simply speaking, slow tests waste your time making you less productive.
+はっきりと言うと、遅いテストは時間の無駄であり、あなたの活動を非生産的なものにします。
 
-TestProf toolbox aims to help you identify bottlenecks in your test suite. It contains:
+TestProf ツールボックスは以下のようなツールを備えており、テストスイートに含まれるボトルネックを特定するのに役立つでしょう。
 
-- Plug'n'Play integration for general Ruby profilers ([`ruby-prof`](https://github.com/ruby-prof/ruby-prof), [`stackprof`](https://github.com/tmm1/stackprof))
+- 一般的な Ruby プロファイラのための プラグ・アンド・プレイ ([`ruby-prof`](https://github.com/ruby-prof/ruby-prof), [`stackprof`](https://github.com/tmm1/stackprof))
 
-- Factories usage analyzers and profilers
+- Factory の使用状況についての分析器とプロファイラ
 
-- ActiveSupport-backed profilers
+- ActiveSupport を活用したプロファイラ
 
-- RSpec and minitest [helpers](#recipes) to write faster tests
+- より速いテストを書くための、RSpec と minitest のための[ヘルパー](#recipes)
 
-- RuboCop cops
+- RuboCop で使える Cop (検査ルール)
 
-- etc.
+- その他色々
 
-📑 [Documentation](https://test-prof.evilmartians.io)
+📑 [ドキュメント](https://test-prof.evilmartians.io)
 
 <p align="center">
   <a href="http://bit.ly/test-prof-map-v1">
@@ -43,16 +45,16 @@ TestProf toolbox aims to help you identify bottlenecks in your test suite. It co
   </a>
 </p>
 
-## Who uses TestProf
+## TestProf を使用するチーム
 
-- [Discourse](https://github.com/discourse/discourse) reduced [~27% of their test suite time](https://twitter.com/samsaffron/status/1125602558024699904)
-- [Gitlab](https://gitlab.com/gitlab-org/gitlab-ce) reduced [39% of their API tests time](https://gitlab.com/gitlab-org/gitlab-ce/merge_requests/14370)
+- [Discourse](https://github.com/discourse/discourse) は [~27% 程度テストスイートの実行時間を削減した](https://twitter.com/samsaffron/status/1125602558024699904)
+- [Gitlab](https://gitlab.com/gitlab-org/gitlab-ce) は [39% API テストの実行時間を削減した](https://gitlab.com/gitlab-org/gitlab-ce/merge_requests/14370)
 - [CodeTriage](https://github.com/codetriage/codetriage)
 - [Dev.to](https://github.com/thepracticaldev/dev.to)
 - [Open Project](https://github.com/opf/openproject)
-- [...and others](https://github.com/test-prof/test-prof/issues/73)
+- [その他色々...](https://github.com/test-prof/test-prof/issues/73)
 
-## Resources
+## 情報リソース
 
 - [TestProf: a good doctor for slow Ruby tests](https://evilmartians.com/chronicles/testprof-a-good-doctor-for-slow-ruby-tests)
 
@@ -62,19 +64,19 @@ TestProf toolbox aims to help you identify bottlenecks in your test suite. It co
 
 - [Rails Testing on Rocket Fuel: How we made our tests 5x faster](https://www.zerogravity.co.uk/blog/ruby-on-rails-slow-tests)
 
-- Paris.rb, 2018, "99 Problems of Slow Tests" talk [[video](https://www.youtube.com/watch?v=eDMZS_fkRtk), [slides](https://speakerdeck.com/palkan/paris-dot-rb-2018-99-problems-of-slow-tests)]
+- Paris.rb, 2018, "99 Problems of Slow Tests" talk [[ビデオ](https://www.youtube.com/watch?v=eDMZS_fkRtk), [スライド](https://speakerdeck.com/palkan/paris-dot-rb-2018-99-problems-of-slow-tests)]
 
-- BalkanRuby, 2018, "Take your slow tests to the doctor" talk [[video](https://www.youtube.com/watch?v=rOcrme82vC8)], [slides](https://speakerdeck.com/palkan/balkanruby-2018-take-your-slow-tests-to-the-doctor)]
+- BalkanRuby, 2018, "Take your slow tests to the doctor" talk [[ビデオ](https://www.youtube.com/watch?v=rOcrme82vC8), [スライド](https://speakerdeck.com/palkan/balkanruby-2018-take-your-slow-tests-to-the-doctor)]
 
-- RailsClub, Moscow, 2017, "Faster Tests" talk [[video](https://www.youtube.com/watch?v=8S7oHjEiVzs) (RU), [slides](https://speakerdeck.com/palkan/railsclub-moscow-2017-faster-tests)]
+- RailsClub, Moscow, 2017, "Faster Tests" talk [[ビデオ](https://www.youtube.com/watch?v=8S7oHjEiVzs) (ロシア語), [スライド](https://speakerdeck.com/palkan/railsclub-moscow-2017-faster-tests)]
 
-- RubyConfBy, 2017, "Run Test Run" talk [[video](https://www.youtube.com/watch?v=q52n4p0wkIs), [slides](https://speakerdeck.com/palkan/rubyconfby-minsk-2017-run-test-run)]
+- RubyConfBy, 2017, "Run Test Run" talk [[ビデオ](https://www.youtube.com/watch?v=q52n4p0wkIs), [スライド](https://speakerdeck.com/palkan/rubyconfby-minsk-2017-run-test-run)]
 
 - [Tips to improve speed of your test suite](https://medium.com/appaloosa-store-engineering/tips-to-improve-speed-of-your-test-suite-8418b485205c) by [Benoit Tigeot](https://github.com/benoittgt)
 
-## Installation
+## インストール
 
-Add `test-prof` gem to your application:
+`test-prof` gem をアプリケーションに追加してください。
 
 ```ruby
 group :test do
@@ -82,35 +84,36 @@ group :test do
 end
 ```
 
-And that's it)
+これだけで完了です。
 
-Supported Ruby versions:
+サポートされるRuby バージョン:
 
-- Ruby (MRI) >= 2.5.0 (**NOTE:** for Ruby 2.2 use TestProf < 0.7.0, Ruby 2.3 use TestProf ~> 0.7.0, Ruby 2.4 use TestProf <0.12.0)
+- Ruby (MRI) >= 2.5.0 (**注意:** Ruby 2.2 では TestProf < 0.7.0, Ruby 2.3 では TestProf ~> 0.7.0, Ruby 2.4 では TestProf <0.12.0 を使用してください)
 
-- JRuby >= 9.1.0.0 (**NOTE:** refinements-dependent features might require 9.2.7+)
+- JRuby >= 9.1.0.0 (**注意:** refinements に依存する機能は 9.2.7+ を必要とする場合があります)
 
-Supported RSpec version (for RSpec features only): >= 3.5.0 (for older RSpec version use TestProf < 0.8.0).
+サポートされる RSpec のバージョン (RSpec に関する機能のみ): >= 3.5.0 (より古いバージョンの RSpec に対しては TestProf < 0.8.0 を使用してください)
 
-Supported Rails version (for Rails features only): >= 5.2.0 (for older Rails versions use TestProf < 1.0).
+サポートされる Rails のバージョン (Ralis に関する機能のみ): >= 5.2.0 (より古いバージョンの Rails に対しては TestProf < 1.0 を使用してください)
 
-### Linting with RuboCop RSpec
+### RuboCop RSpec によるリント
 
-When you lint your RSpec spec files with `rubocop-rspec`, it will fail to properly detect RSpec constructs that TestProf defines, `let_it_be` and `before_all`.
-Make sure to use `rubocop-rspec` 2.0 or newer and add the following to your `.rubocop.yml`:
+rubocop-rspec を用いて RSpecファイル を静的解析すると、TestProfが定義している`let_it_be`と`before_all`とった RSpec 用のコンストラクトを正しく検出できないことがあります。
+
+バージョン2.0 以降の `rubocop-rspec` が使用されていることを確認の上、`.rubocop.yml`に以下の記述を追加してください。
 
 ```yaml
 inherit_gem:
   test-prof: config/rubocop-rspec.yml
 ```
 
-## Profilers
+## プロファイラ
 
 - [RubyProf Integration](./profilers/ruby_prof.md)
 
 - [StackProf Integration](./profilers/stack_prof.md)
 
-- [Event Profiler](./profilers/event_prof.md) (e.g. ActiveSupport notifications)
+- [Event Profiler](./profilers/event_prof.md) (ActiveSupport notifications など)
 
 - [Tag Profiler](./profilers/tag_prof.md)
 
@@ -120,9 +123,9 @@ inherit_gem:
 
 - [RSpecDissect Profiler](./profilers/rspec_dissect.md)
 
-## Recipes
+## レシピ
 
-We also want to share some small code tricks which can help you to improve your test suite performance and efficiency:
+テストスイートの性能と効率を向上させるのに役立つ、ちょっとしたコードトリックを紹介します
 
 - [`before_all` Hook](./recipes/before_all.md)
 
@@ -142,16 +145,16 @@ We also want to share some small code tricks which can help you to improve your 
 
 - [Rails Logging](./recipes/logging.md)
 
-## Other tools
+## 他のツール
 
 - [RuboCop cops](./misc/rubocop.md)
 
-## What's next
+## 次は何？
 
-Have an idea? [Propose](https://github.com/test-prof/test-prof/discussions) a feature request!
+良いアイデアあれば、 [このページ](https://github.com/test-prof/test-prof/discussions) から新しい機能を提案してください！
 
-Already using TestProf? [Share your story!](https://github.com/test-prof/test-prof/discussions/73)
+それとも、既に TestProf を使用しているなら、 [あなたの体験をシェアしてください！](https://github.com/test-prof/test-prof/discussions/73)
 
-## License
+## ライセンス
 
-The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
+この gem は [MIT License](http://opensource.org/licenses/MIT) のもと、オープンソースとして使用することができます。
