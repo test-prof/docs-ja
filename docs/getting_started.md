@@ -1,8 +1,8 @@
-# Getting Started
+# はじめに
 
-## Installation
+## インストール
 
-Add `test-prof` gem to your application:
+`test-prof` gem をアプリケーションに追加してください。
 
 ```ruby
 group :test do
@@ -10,44 +10,46 @@ group :test do
 end
 ```
 
-That's it! Now you can use TestProf [profilers](/#profilers).
+これだけで完了です。TestProfを使用する準備ができました！ [プロファイル](/#profilers).
 
-## Configuration
+## 設定
 
-TestProf global configuration is used by most of the profilers:
+TestProf には、全ツールで使用されるグローバル設定がいくつかあります。
 
 ```ruby
 TestProf.configure do |config|
-  # the directory to put artifacts (reports) in ('tmp/test_prof' by default)
+  #　レポートなどを保存するフォルダー (デフォルトは'tmp/test_prof')
   config.output_dir = "tmp/test_prof"
 
-  # use unique filenames for reports (by simply appending current timestamp)
+  # レポートに対し一意なファイル名を付与する(単に、現在のタイムスタンプを追加する)
   config.timestamps = true
 
-  # color output
+  # 色付きで出力する
   config.color = true
 
-  # where to write logs (defaults)
+  # ログの出力先 (デフォルト)
   config.output = $stdout
 
-  # alternatively, you can specify a custom logger instance
+  # あるいは、カスタムのロガーインスタンスを指定することもできます
   config.logger = MyLogger.new
 end
 ```
 
-You can also dynamically add artifacts/reports suffixes via `TEST_PROF_REPORT` env variable.
-It is useful if you're not using timestamps and want to generate multiple reports with different setups and compare them.
+また、「`TEST_PROF_REPORT`」という環境変数を使用して、レポート名に識別子を追加することができます。  
+これは、異なるセットアップ間でレポートを比較したい場合に役立ちます。
 
-For example, let's compare tests load time with and without `bootsnap` using [`stackprof`](./profilers/stack_prof.md):
+**例：** `bootsnap`を使う場合と使わない場合のロード時間を[`stackprof`](./profilers/stack_prof.md)で比較してみましょう。
 
 ```sh
-# Generate first report using `-with-bootsnap` suffix
+# 一番目のレポートに、接頭語「-with-bootsnap」を付けます
 $ TEST_STACK_PROF=boot TEST_PROF_REPORT=with-bootsnap bundle exec rake
 $ #=> StackProf report generated: tmp/test_prof/stack-prof-report-wall-raw-boot-with-bootsnap.dump
 
+
+# bootsnapを無効にし、二番目のレポートを作成したい
 # Assume that you disabled bootsnap and want to generate a new report
 $ TEST_STACK_PROF=boot TEST_PROF_REPORT=no-bootsnap bundle exec rake
 $ #=> StackProf report generated: tmp/test_prof/stack-prof-report-wall-raw-boot-no-bootsnap.dump
 ```
 
-Now you have two stackprof reports with clear names!
+これで、分かりやすい名前のレポートが二つできました。
