@@ -6,7 +6,7 @@
 > Ruby テストのプロファイリングと最適化のためのツールボックス
 
 <img align="right" height="150" width="129"
-     title="TestProf logo" class="home-logo" src="./assets/images/logo.svg">
+     title="TestProf logo" class="home-logo" src="/assets/images/logo.svg">
 
 TestProf はテストスイートの性能を分析するための様々なツールの詰め合わせです。
 
