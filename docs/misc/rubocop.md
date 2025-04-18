@@ -1,4 +1,4 @@
-# RuboCop Copsのカスタム
+# RuboCopのカスタムCop
 
 TestProfにはより高いパフォーマンスのテストを書くことを支援する[RuboCop](https://github.com/bbatsov/rubocop) Copsが付属しています。
 

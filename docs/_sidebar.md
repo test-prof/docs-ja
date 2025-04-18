@@ -27,4 +27,4 @@
   * [Rails のロギング](/recipes/logging.md)
 
 * その他
-  * [RuboCop の検査ルール](/misc/rubocop.md)
+  * [RuboCopのカスタムCop](/misc/rubocop.md)
