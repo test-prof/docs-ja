@@ -1,31 +1,36 @@
-# Playbook
+# プレイブック
 
-This document aims to help you get started with profiling test suites and answers the following questions: which profiles to run first? How do we interpret the results to choose the next steps? Etc.
+このプレイブックは、テストスイートのプロファイリングを始める際の手助けを目的としており、「まずどのプロファイルを実行すべきか？」「結果をどう解釈し、次のステップをどう決めればよいか？」といった疑問に答えます。
 
-**NOTE**: This document assumes you're working with a Ruby on Rails application and RSpec testing framework. The ideas can easily be translated into other frameworks.
+**注意**：このドキュメントでは、Ruby on RailsアプリケーションとテストフレームワークとしてのRSpecを使用していることを前提としています。これらのアイデアは他のフレームワークにも簡単に応用できます。
 
-## Step 0. Configuration basics
+## ステップ0. 基本的な設定
 
-Low-hanging configuration fruits:
+手軽に改善できる点：
 
-- Disable logging in tests—it's useless. If you really need it, use our [logging utils](./recipes/logging.md).
+- テストでのロギングを無効にする — 意味がありません。もしログが本当に必要な場合は、[ロギングユーティリティ](./recipes/logging.md)を使用してください。
 
 ```ruby
 config.logger = ActiveSupport::TaggedLogging.new(Logger.new(nil))
 config.log_level = :fatal
 ```
 
-- Disable coverage and built-in profiling by default. Use env var to enable it (e.g., `COVERAGE=true`)
+- デフォルトではカバレッジと組み込みプロファイリングを無効です。必要であれば、環境変数を使って有効にしましょう（例：`COVERAGE=true`）
 
-## Step 1. General profiling
+- 現代のSSDハードドライブでは、ファイルベースのロギングによるオーバーヘッドはほとんど無視できる程度になっています。それでもなお、どの環境（例：MacOS上のDockerなど）でもテストに影響が出ないように、ロギングは無効にすることを推奨します。
 
-It helps to identify not-so-low hanging fruits. We recommend using [StackProf](./profilers/stack_prof.md), so you must install it first (if not yet):
+## ステップ1. 全般的なプロファイリング
+
+
+あまり手軽ではない問題点を特定するのに役立ちます。[StackProf](./profilers/stack_prof.md) または [Vernier](./profilers/ruby_profilers.md#vernier) の使用をお勧めします。まだインストールしていない場合は、まずインストールする必要があります：
 
 ```sh
 bundle add stackprof
+# または
+bundle add vernier
 ```
 
-Configure Test Prof to generate JSON profiles by default:
+Test ProfがデフォルトでJSONプロファイルを生成するように設定します：
 
 ```ruby
 TestProf::StackProf.configure do |config|
@@ -33,85 +38,87 @@ TestProf::StackProf.configure do |config|
 end
 ```
 
-We recommend using [speedscope](https://www.speedscope.app) to analyze these profiles.
+これらのプロファイルを分析するには[speedscope](https://www.speedscope.app)というツールを利用することをお勧めします。
 
-### Step 1.1. Application boot profiling
+### ステップ1.1. アプリケーション起動のプロファイリング
 
 ```sh
 TEST_STACK_PROF=boot rspec ./spec/some_spec.rb
 ```
 
-**NOTE:** running a single spec/test is enough for this profiling.
+**注意:** このプロファイリングでは、単一のテストを実行するだけでOKです。
 
-What to look for? Some examples:
+注目すべきポイントの例：
+- [Bootsnap](https://github.com/Shopify/bootsnap)が使用されていない、または全てをキャッシュするように設定されていない（例：YAMLファイル）
+- テストでは不要な、遅いRails initializerを探す。特に Vernirer の Rails フック機能は Rails initializer を分析するのに役立ちます。
 
-- No [Bootsnap](https://github.com/Shopify/bootsnap) used or not configured to cache everything (e.g., YAML files)
-- Slow Rails initializers that are not needed in tests.
 
-### Step 1.2. Sampling tests profiling
+### ステップ1.2. テストのサンプリングプロファイリング
 
-The idea is to run a random subset of tests multiple times to reveal some application-wide problems. You must enable the [sampling feature](./recipes/tests_sampling.md) first:
+アイデアとしては、ランダムなテストのサブセットを複数回実行して、アプリケーション全体の問題を明らかにすることです。まず[サンプリング機能](./recipes/tests_sampling.md)を有効にする必要があります：
 
 ```rb
-# For RSpec in your spec_helper.rb
+# RSpecの場合、spec_helper.rbに追加
 require "test_prof/recipes/rspec/sample"
 
-# For Minitest in your test_helper.rb
+# Minitestの場合、test_helper.rbに追加
 require "test_prof/recipes/minitest/sample"
 ```
 
-Then run **multiple times** and analyze the obtained flamegraphs:
+次に**複数回**実行して、得られたフレームグラフを分析します：
 
 ```sh
 SAMPLE=100 bin/rails test
-# or
+# または
 SAMPLE=100 bin/rspec
 ```
 
-Common findings:
+よくある気づき：
 
-- Encryption calls (`*crypt*`-whatever): relax the settings in the test env
-- Log calls: are you sure you disabled logs?
-- Databases: maybe there are some low-hanging fruits (like using DatabaseCleaner truncation for every test instead of transactions)
-- Network: should not be there for unit tests, inevitable for browser tests; use [Webmock](https://github.com/bblimke/webmock) to disable HTTP calls completely.
+- 暗号化呼び出し（`*crypt*`など）：テスト環境での設定を緩和する
+- ログ呼び出し：ログを無効にしましたか？
+- データベース：手軽に修正できる点があるかもしれません（例：トランザクションの代わりに全てのテストでDatabaseCleanerのトランケーションを使用するなど）
+- ネットワーク：単体テストでは不要ですが、ブラウザテストでは避けられません。[Webmock](https://github.com/bblimke/webmock)を使用して HTTP 呼び出しを完全に無効化しましょう。
 
-## Step 2. Narrow down the scope
+## ステップ2. 範囲を絞り込む
 
-This is an important step for large codebases. We must prioritize quick fixes that bring the most value (time reduction) over dealing with complex, slow tests individually (even if they're the slowest ones). For that, we first identify the **types of tests** contributing the most to the overall run time.
+これは、大規模なコードベースにおいて非常に重要なステップです。たとえ最も遅いテストであっても、複雑なものに個別対処するよりは、実行時間の短縮という観点で最も効果の高い、手早く直せる箇所を優先すべきです。
+そのためにまず、全体の実行時間に最も大きく影響しているテストの種類を特定します。
 
-We use [TagProf](./profilers/tag_prof.md) for that:
+そのために[TagProf](./profilers/tag_prof.md)を使用します：
 
 ```sh
 TAG_PROF=type TAG_PROF_FORMAT=html TAG_PROF_EVENT=sql.active_record,factory.create bin/rspec
 ```
 
-Looking at the generated diagram, you can identify the two most time-consuming test types (usually models and/or controllers among them).
+生成されたダイアグラムを見ると、最も時間のかかるテストタイプ2つを特定できます（通常、モデルやコントローラーがその中に含まれます）。
 
-We assume that it's easier to find a common slowness cause for the whole group and fix it than dealing with individual tests. Given that assumption, we continue the process only within the selected group (let's say, models).
+グループ全体に共通する遅延の原因を見つけて修正するほうが、個々のテストに個別対応するよりも効率的だと仮定しましょう。
+この前提のもと、選択したグループ（たとえばモデル）内に絞って、分析や対応を進めていきます。
 
-## Step 3. Specialized profiling
+## ステップ3. 専門的なプロファイリング
 
-Within the selected group, we can first perform quick event-based profiling via [EventProf](./profilers/event_prof.md). (Maybe, with sampling enabled as well).
+選択したグループ内で、まず[EventProf](./profilers/event_prof.md)を使用して迅速なイベントベースのプロファイリングを実行できます（サンプリングも有効にすることもできます）。
 
-### Step 3.1. Dependencies configuration
+### ステップ3.1. 依存関係の設定
 
-At this point, we may identify some misconfigured or misused dependencies/gems. Common examples:
+この時点で、設定ミスや誤った使い方をされている依存関係や gem を特定できる場合があります。
+よくある例:
 
-- Inlined Sidekiq jobs:
+- インライン化されたSidekiqジョブ
 
 ```sh
 EVENT_PROF=sidekiq.inline bin/rspec spec/models
 ```
-
-- Wisper broadcasts ([patch required](https://gist.github.com/palkan/aa7035cebaeca7ed76e433981f90c07b)):
+- Wisperブロードキャスト（[パッチが必要](https://gist.github.com/palkan/aa7035cebaeca7ed76e433981f90c07b)）
 
 ```sh
 EVENT_PROF=wisper.publisher.broadcast bin/rspec spec/models
 ```
 
-- PaperTrail logs creation:
+- PaperTrailのログ作成
 
-Enable custom profiling:
+カスタムプロファイリングを有効にします
 
 ```rb
 TestProf::EventProf.monitor(PaperTrail::RecordTrail, "paper_trail.record", :record_create)
@@ -119,85 +126,87 @@ TestProf::EventProf.monitor(PaperTrail::RecordTrail, "paper_trail.record", :reco
 TestProf::EventProf.monitor(PaperTrail::RecordTrail, "paper_trail.record", :record_update)
 ```
 
-Run tests:
+そしたらテストを実行します
 
 ```sh
 EVENT_PROF=paper_trail.record bin/rspec spec/models
 ```
 
-See [the Sidekiq example](https://evilmartians.com/chronicles/testprof-a-good-doctor-for-slow-ruby-tests#background-jobs) on how to quickly fix such problems using [RSpecStamp](./recipes/rspec_stamp.md).
+[RSpecStamp](./recipes/rspec_stamp.md)を使用してこのような問題を素早く修正する方法については、[Sidekiqの例](https://evilmartians.com/chronicles/testprof-a-good-doctor-for-slow-ruby-tests#background-jobs)を参照してください。
 
-### Step 3.2. Data generation
+### ステップ3.2. データ生成
 
-Identify the slowest tests based on the amount of time spent in the database or factories (if any):
+データベースやファクトリ（使用している場合）関連で費やされた時間に基づき、最も遅いテストを特定します：
 
 ```sh
-# Database interactions
+# Database 操作
 EVENT_PROF=sql.active_record bin/rspec spec/models
 
 # Factories
 EVENT_PROF=factory.create bin/rspec spec/models
 ```
 
-Now, we can narrow our scope further to the top 10 files from the generated reports. If you use factories, use the `factory.create` report.
+これで、生成されたレポートから上位10ファイルにさらに範囲を絞ることができます。ファクトリを使用している場合は、`factory.create`レポートを使用してください。
 
-**TIP:** In RSpec, you can mark the slowest examples with a custom tag automatically using the following command:
+**ヒント:** RSpecでは、次のコマンドを使用して、最も遅い例をカスタムタグで自動的にマークできます：
 
 ```sh
 EVENT_PROF=factory.create EVENT_PROF_STAMP=slow:factory bin/rspec spec/models
 ```
 
-## Step 4. Factories usage
+## ステップ4. ファクトリの使用
 
-Identify the most used factories among the `slow:factory` tests:
+`slow:factory`テストの中で最も使用されているファクトリを特定します：
 
 ```sh
 FPROF=1 bin/rspec --tag slow:factory
 ```
 
-If you see some factories used much more times than the total number of examples, you deal with _factory cascades_.
+例の総数よりもはるかに多くの回数使用されているファクトリが見つかった場合、_ファクトリカスケード_に対処しています。
 
-Visualize the cascades:
+カスケードを視覚化します：
 
 ```sh
 FPROF=flamegraph bin/rspec --tag slow:factory
 ```
 
-The visualization should help to identify the factories to be fixed. You find possible solutions in [this post](https://evilmartians.com/chronicles/testprof-2-factory-therapy-for-your-ruby-tests-rspec-minitest).
+視覚化により、修正すべきファクトリを特定するのに役立ちます。[この記事](https://evilmartians.com/chronicles/testprof-2-factory-therapy-for-your-ruby-tests-rspec-minitest)で解決策を見つけることができます。
 
-### Step 4.1. Factory defaults
+### ステップ4.1. ファクトリデフォルト
 
-One option to fix cascades produced by model associations is to use [factory defaults](./recipes/factory_default.md). To estimate the potential impact and identify factories to apply this pattern to, run the following profiler:
+モデルの関連付けによって生成されるカスケードを修正する一つの選択肢は、[factory defaults](./recipes/factory_default.md)を使用することです。潜在的な影響を評価し、このパターンを適用するファクトリを特定するには、次のプロファイラを実行します：
 
 ```sh
 FACTORY_DEFAULT_PROF=1 bin/rspec --tag slow:factory
 ```
 
-Try adding `create_default` and measure the impact:
+`create_default`を追加して影響を測定してみてください：
 
 ```sh
 FACTORY_DEFAULT_SUMMARY=1 bin/rspec --tag slow:factory
 
-# More hits — better
+# ヒット数が多いほど良い
 FactoryDefault summary: hit=11 miss=3
 ```
 
-### Step 4.2. Factory fixtures
+### ステップ4.2. ファクトリフィクスチャ
 
-Back to the `FPROF=1` report, see if you have some records created for every example (typically, `user`, `account`, `team`). Consider replacing them with fixtures using [AnyFixture](./recipes/any_fixture.md).
+`FPROF=1`レポートに戻り、すべての例で作成されるレコードがあるか確認します（通常、`user`、`account`、`team`など）。[AnyFixture](./recipes/any_fixture.md)を使用してフィクスチャに置き換えることを検討してください。
 
-## Step 5. Reusable setup
+## ステップ5. 再利用可能なセットアップ
 
-It's common to have the same setup shared across multiple examples. You can measure the time spent in `let` / `before` compared to the actual example time using [RSpecDissect](./profilers/rspec_dissect.md):
+複数の例で同じセットアップが共有されていることはよくあります。[RSpecDissect](./profilers/rspec_dissect.md)を使用して、実際の例の時間と比較して`let` / `before`で費やされた時間を測定できます：
 
 ```sh
 RD_PROF=1 bin/rspec
 ```
 
-Take a look at the slowest groups and try to replace `let`/`let!` with [let_it_be](./recipes/let_it_be.md) and `before` with [before_all](./recipes/before_all.md).
+最も遅いグループを確認し、`let`/`let!`を[let_it_be](./recipes/let_it_be.md)に、`before`を[before_all](./recipes/before_all.md)に置き換えることを検討してください。
 
-**IMPORTANT:** Knapsack Pro users must be aware that per-example balancing eliminates the positive effect of using `let_it_be` / `before_all`. You must switch to per-file balancing while at the same time keeping your files small—that's how you can maximize the effect of using Test Prof optimizations.
+**重要:** Knapsack Proユーザーは、例ごとのバランシングが`let_it_be` / `before_all`の使用の肯定的な効果を排除することに注意する必要があります。ファイルごとのバランシングに切り替えながら、同時にファイルを小さく保つ必要があります—これがTest Profの最適化の効果を最大化する方法です。
 
-## Conclusion
+## 結論
 
-After applying the steps above to a given group of tests, you should develop the patterns and techniques optimized for your codebase. Then, all you need is to extrapolate them to other groups. Good luck!
+上記のステップを特定のテストグループに適用した後、コードベースに最適化されたパターンと技術を開発する必要があります。その後、必要なのはそれらを他のグループに外挿することだけです。がんばってください！
+
+
