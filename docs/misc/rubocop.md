@@ -1,8 +1,8 @@
-# Custom RuboCop Cops
+# RuboCopのカスタムCop
 
-TestProf comes with the [RuboCop](https://github.com/bbatsov/rubocop) cops that help you write more performant tests.
+TestProfにはより高いパフォーマンスのテストを書くことを支援する[RuboCop](https://github.com/bbatsov/rubocop) Copsが付属しています。
 
-To enable them, require `test_prof/rubocop` in your RuboCop configuration:
+これらを有効化するにはRuboCopの設定に`test_prof/rubocop`を追加してください。
 
 ```yml
 # .rubocop.yml
@@ -10,14 +10,14 @@ require:
  - 'test_prof/rubocop'
 ```
 
-To configure cops to your needs:
+自分のニーズに合わせて設定する場合は以下のようにしてください。
 
 ```yml
 RSpec/AggregateExamples:
   AddAggregateFailuresMetadata: false
 ```
 
-Or you can just require it dynamically:
+もしくは、動的に追加することも可能です。
 
 ```sh
 bundle exec rubocop -r 'test_prof/rubocop' --only RSpec/AggregateExamples
@@ -25,12 +25,12 @@ bundle exec rubocop -r 'test_prof/rubocop' --only RSpec/AggregateExamples
 
 ## RSpec/AggregateExamples
 
-This cop encourages you to use one of the greatest features of the recent RSpec – aggregating failures within an example.
+このCopは最近のRSpecの強力な機能の一つである「失敗の集約（aggregate_failures）」をexampleの中で使用することを推奨しています。
 
-Instead of writing one example per assertion, you can group _independent_ assertions together, thus running all setup hooks only once.
-That can dramatically increase your performance (by reducing the total number of examples).
+アサーションごとにexampleを書くのではなく、 _独立した_ アサーションを一つのexampleにまとめることで、セットアップのフックを一度だけ実行するようにできます。
+これによりテストのパフォーマンスが劇的に向上します。(exampleの総数の減少によって
 
-Consider an example:
+以下の例を考えます。
 
 ```ruby
 # bad
@@ -48,10 +48,11 @@ it "returns the second page", :aggregate_failures do
 end
 ```
 
-Auto-correction will typically add `:aggregate_failures` to examples, but if your project enables it globally, or selectively by e.g. deriving metadata from file location, you may opt-out of adding it using `AddAggregateFailuresMetadata` config option.
+自動修正(auto-correct)時は通常、exampleに`:aggregate_failures`を自動的に追加します。
+しかし、プロジェクト全体でそれがグローバルに有効になっている場合や、例えばファイルの場所などからメタデータを導出するように選択的に有効にしている場合は、 `AddAggregateFailuresMetadata`設定オプションを使用しているものの追加はしない可能性があります。
 
-This cop supports auto-correct feature, so you can automatically refactor you legacy tests!
+このCopは自動修正をサポートしているため、古いテストを自動的にリファクタリングすることが可能です！
 
-**NOTE**: `its` examples shown here have been deprecated as of RSpec 3, but users of the [rspec-its gem](https://github.com/rspec/rspec-its) can leverage this cop to cut out that dependency.
+**補足**: ここで使用されている`its`exampleはRSpec3以降では非推奨になっていますが、[rspec-its gem](https://github.com/rspec/rspec-its)を使用しているユーザーは、このCopを活用してその依存を削減できます。
 
-**NOTE**: auto-correction of examples using block matchers, such as `change` is deliberately not supported.
+**補足**: `change`などのブロックマッチャーを使ったexampleの自動修正は、意図的にサポートされていません。
